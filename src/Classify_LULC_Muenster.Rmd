@@ -31,12 +31,17 @@ trainsites <- st_read("../data/trainingsites_muenster.gpkg")
 ```
 
 ### Download Sentinel-2 data
+
+```{r echo=FALSE}
+write_scihub_login("*******", "******")
+```
+
 ```{r, message=FALSE,warning=FALSE}
 ## Login first:
-#write_scihub_login("xxxx", "xxxx")
+#write_scihub_login("*****", "******")
 
 list_safe <- s2_list(
-  spatial_extent = trainsites,
+  spatial_extent = st_as_sfc(st_bbox(trainsites)),
   tile = "32ULC",
   level = "L1C",
   time_interval = as.Date(c("2020-04-26", "2020-04-28"))) # ursprüngliche szene: c("2019-04-17", "2019-04-19")
@@ -44,7 +49,7 @@ list_safe <- s2_list(
 
 ##order_path <- attr(ordered_prods, "path")
 ##safe_is_online(order_path)
-s2_download(list_safe[1], outdir="../data/")
+#s2_download(list_safe[1], outdir="../data/")
 sen_id <- names(list_safe[1])
                 
 ```
@@ -53,15 +58,18 @@ sen_id <- names(list_safe[1])
 
 ```{r}
 bands <- c("B04", "B03", "B02", "B08")#, "B05", "B06", "B07", "B8A", "B11", "B12")
+#bands <- c("B04", "B03", "B02", "B08", "B05", "B06", "B07", "B8A", "B11", "B12")
 
 s2 <- list.files(paste0("../data/",sen_id),
                  recursive=TRUE,
                  full.names = TRUE,
                  pattern=".jp2")
-s2 <- s2[substr(s2,nchar(s2)-6,nchar(s2))%in%paste0(bands,".jp2")]
+# match band name to file name:
+m = match(paste0(bands,".jp2"), substr(s2,nchar(s2)-6,nchar(s2)))
+s2 <- s2[m]
 
 sen <- read_stars(s2, proxy = TRUE, NA_value = 0) %>%
-  setNames(bands) 
+  setNames(bands)
 ```
 
 
@@ -100,8 +108,6 @@ AOA <- aoa(sen_b, model)
 
 ## Visualize results
 ```{r, warning=FALSE, message=FALSE}
-
-
 
 cols <- rev(c("red","lightgreen","forestgreen","blue","darkred","green","beige"))
 tm_shape(prediction,
