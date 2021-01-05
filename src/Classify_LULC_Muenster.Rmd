@@ -33,7 +33,7 @@ trainsites <- st_read("../data/trainingsites_muenster.gpkg")
 ### Download Sentinel-2 data
 
 ```{r echo=FALSE}
-write_scihub_login("*******", "******")
+write_scihub_login("****", "****")
 ```
 
 ```{r, message=FALSE,warning=FALSE}
@@ -110,7 +110,7 @@ AOA <- aoa(sen_b, model)
 ```{r, warning=FALSE, message=FALSE}
 
 cols <- rev(c("red","lightgreen","forestgreen","blue","darkred","green","beige"))
-tm_shape(prediction,
+tm_shape(st_as_stars(prediction, downsample = c(20,20)),
                 raster.downsample = FALSE) +
   tm_raster(palette = cols,title = "LUC")+
   tm_scale_bar(bg.color="white")+
@@ -124,10 +124,9 @@ tm_shape(prediction,
 ### RGB of small area
 sen_crop <- st_crop(sen,st_bbox(trainsites))
 sen_crop_p <- merge(st_as_stars(sen_crop))
-plot(sen_crop_p,rgb=c(3,2,1))
-
+plot(st_rgb(sen_crop_p[,,,c(3,2,1)], stretch = TRUE, probs = c(.05, .95)))
 prediction_crop <- st_crop(prediction,st_bbox(trainsites))
-tm_shape(prediction_crop,
+tm_shape(st_as_stars(prediction_crop),
                 raster.downsample = FALSE) +
   tm_raster(palette = cols,title = "LUC")+
   tm_scale_bar(bg.color="white")+
